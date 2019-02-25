@@ -96,3 +96,12 @@ class LedHandler(web.RequestHandler):
                 'description':led.description
                 'brightness_level':brightness_level
             }
+            self.set_status(status.HTTP_200_OK)
+            self.write(response)
+        except ValueError as e:
+            print("Iv'e failed setting the {0}'s brightness level".format(led.description))
+            self.set_status(status.HTTP_400_BAD_REQUEST)
+            response = {
+                'error': e.args[0]
+            }
+            self.write(response)
