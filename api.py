@@ -1,18 +1,19 @@
-import status 
-from datetime import date 
-from tornado import web, escape, ioloop, httpclient, gen 
-from drone import Altimer, Drone , Hexacopter, LightEmittingDiode
+import status
+from datetime import date
+from tornado import web, escape, ioloop, httpclient, gen
+from drone import Altimer, Drone, Hexacopter, LightEmittingDiode
 
 drone = Drone()
+
 
 class HexacopterHandler(web.RequestHandler):
     SUPPORTED_METHODS = ("GET", "PATCH")
     HEXACOPTER_ID = 1
 
-    def get(self,id):
+    def get(self, id):
         if int(id) is not self.__class__.HEXACOPTER_ID:
             self.set_status(status.HTTP_404_NOT_FOUND)
-            return 
+            return
         print("I've started retrieving hexacopter's status")
         hexacopter_status = drone.hexacopter.get_hexacopter_status()
         print("I've finished retrieving hexacopter's status")
@@ -21,13 +22,13 @@ class HexacopterHandler(web.RequestHandler):
             'turned_on': hexacopter_status.turned_on
         }
         self.set_status(status.HTTP_200_OK)
-        # Tornado automatically writes the chunk in json 
+        # Tornado automatically writes the chunk in json
         self.write(response)
 
-    def patch(self,id):
+    def patch(self, id):
         if int(id) is not self.__class__.HEXACOPTER_ID:
             self.set_status(status.HTTP_404_NOT_FOUND)
-            return 
+            return
         request_data = escape.json_decode(self.request.body)
         if ('motor_speed') not in request_data.keys() or \
             (request_data['motor_speed'] is None):
@@ -39,8 +40,8 @@ class HexacopterHandler(web.RequestHandler):
             hexacopter_status = drone.hexacoter.set_motor_speed(motor_speed)
             print("I've finished setting the hexacopter's motor speed")
             response = {
-                'speed':hexacopter_status.motor_speed,
-                'turned_on': hexacopter_status.turned_on 
+                'speed': hexacopter_status.motor_speed,
+                'turned_on': hexacopter_status.turned_on
             }
             self.set_status(status.HTTP_200_OK)
             self.write(response)
@@ -52,10 +53,11 @@ class HexacopterHandler(web.RequestHandler):
             }
             self.write(response)
 
-class LedHandler(web.RequestHandler):
-    SUPPORTED_METHODS = ("GET","PATCH")
 
-    def get(self,id):
+class LedHandler(web.RequestHandler):
+    SUPPORTED_METHODS = ("GET", "PATCH")
+
+    def get(self, id):
         int_id = int(id)
         if int_id not in drone.led.keys():
             self.set_status(status.HTTP_404_NOT_FOUND)
@@ -67,41 +69,67 @@ class LedHandler(web.RequestHandler):
         print("Iv'e finished retrieving {0}'s status".format(led.description))
 
         response = {
-            'id':led.identifier,
+            'id': led.identifier,
             'description': led.description,
             'brightness_level': brightness_level
         }
         self.set_status(status.HTTP_200_OK)
         self.write(response)
 
-    def patch(self,id):
+    def patch(self, id):
         int_id = int(id)
         if int_id not in drone.leds.keys():
             self.set_status(status.HTTP_404_NOT_FOUND)
-            return 
+            return
         led = drone.leds[int_id]
 
         request_data = escape.json_decode(self.request.body)
+
         if('brightness_level' not in request_data.keys()) or \
-            (request_data['brightness_level' is None):
+            (request_data['brightness_level'] is None):
             self.set_status(status.HTTP_400_BAD_REQUEST)
-            return 
+            return
         try:
-            brightness_level = int(request_data['brightness_level'])
-            print("Iv'e started setting the {0}'s brightness_level".format(led.description))
+            brightness_level= int(request_data['brightness_level'])
+            print("Iv'e started setting the {0}'s brightness_level".format(
+                led.description))
             led.set_brightness_level(brightness_level)
-            print("Iv'e started setting the {0}'s status".format(led.description))
-            response = {
+            print("Iv'e started setting the {0}'s status".format(
+                led.description))
+            response= {
                 'id': led.identifier,
-                'description':led.description
-                'brightness_level':brightness_level
+                'description': led.description
+                'brightness_level': brightness_level
             }
             self.set_status(status.HTTP_200_OK)
             self.write(response)
         except ValueError as e:
-            print("Iv'e failed setting the {0}'s brightness level".format(led.description))
+            print("Iv'e failed setting the {0}'s brightness level".format(
+                led.description))
             self.set_status(status.HTTP_400_BAD_REQUEST)
-            response = {
+            response= {
                 'error': e.args[0]
             }
             self.write(response)
+
+
+
+
+class AltimeterHandler(web.RequestHandler):
+    SUPPORTED_METHODS= ("GET")
+    ALTIMETER_ID= 1
+
+    def get(self, id):
+        if int(id) is not self.__class__.ALTIMETER_ID:
+            # set status code 
+            self.set_status(status.HTTP_404_NOT_FOUND)
+            return 
+        print("I've started retrieving the altitude")
+        altitude  = drone.altimeter.get_altitude()
+        print("I've finished retrieving the altitude")
+        response = {
+            'altutude':altitude
+        }
+        self.set_status(status.HTTP_200_OK)
+        # write reponse dictionary into JSON
+        self.write(response)
