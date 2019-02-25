@@ -20,7 +20,7 @@ class HexacopterHandler(web.RequestHandler):
             'speed': hexacopter_status.motor_speed,
             'turned_on': hexacopter_status.turned_on
         }
-        self.set_status(status.HTTP_200_O
+        self.set_status(status.HTTP_200_OK)
         # Tornado automatically writes the chunk in json 
         self.write(response)
 
